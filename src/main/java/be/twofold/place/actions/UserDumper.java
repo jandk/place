@@ -14,15 +14,15 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-final class DumpUsers implements Consumer<Stream<String>> {
+public final class UserDumper implements Consumer<Stream<String>> {
 
     private final Base64.Decoder decoder = Base64.getDecoder();
     private final Base64.Encoder encoder = Base64.getEncoder();
 
-    private final Path root;
+    private final Path usersPath;
 
-    DumpUsers(Path root) {
-        this.root = Objects.requireNonNull(root);
+    public UserDumper(Path usersPath) {
+        this.usersPath = Objects.requireNonNull(usersPath);
     }
 
     @Override
@@ -33,7 +33,7 @@ final class DumpUsers implements Consumer<Stream<String>> {
             .collect(Collectors.toList());
 
         System.out.println("Dumping to file...");
-        try (BufferedWriter writer = Files.newBufferedWriter(root.resolve("users.txt"))) {
+        try (BufferedWriter writer = Files.newBufferedWriter(usersPath)) {
             for (ByteArray user : users) {
                 writer.write(encoder.encodeToString(user.getArray()));
                 writer.write('\n');

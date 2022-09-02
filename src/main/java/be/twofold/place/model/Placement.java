@@ -4,22 +4,22 @@ package be.twofold.place.model;
  * The placement of a single pixel by a user
  */
 public final class Placement {
-    private final long ts;
+    private final long timestamp;
     private final int user;
     private final int x;
     private final int y;
     private final int color;
 
-    public Placement(long ts, int user, int x, int y, int color) {
-        this.ts = ts;
+    public Placement(long timestamp, int user, int x, int y, int color) {
+        this.timestamp = timestamp;
         this.user = user;
         this.x = x;
         this.y = y;
         this.color = color;
     }
 
-    public long getTs() {
-        return ts;
+    public long getTimestamp() {
+        return timestamp;
     }
 
     public int getUser() {
@@ -44,7 +44,7 @@ public final class Placement {
         if (!(obj instanceof Placement)) return false;
 
         Placement placement = (Placement) obj;
-        return ts == placement.ts
+        return timestamp == placement.timestamp
             && user == placement.user
             && x == placement.x
             && y == placement.y
@@ -54,7 +54,7 @@ public final class Placement {
     @Override
     public int hashCode() {
         int result = 1;
-        result = 31 * result + Long.hashCode(ts);
+        result = 31 * result + Long.hashCode(timestamp);
         result = 31 * result + Integer.hashCode(user);
         result = 31 * result + Integer.hashCode(x);
         result = 31 * result + Integer.hashCode(y);
@@ -64,6 +64,6 @@ public final class Placement {
 
     @Override
     public String toString() {
-        return ts + "," + user + "," + x + "," + y + "," + color;
+        return timestamp + "," + user + "," + x + "," + y + "," + color;
     }
 }

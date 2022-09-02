@@ -51,7 +51,7 @@ public class Place {
 
         int cutoff = 1490979600;
         for (Placement placement : placements) {
-            if (placement.getTs() > cutoff) {
+            if (placement.getTimestamp() > cutoff) {
                 dumpImage(image, cutoff);
                 cutoff += 60;
             }

@@ -49,7 +49,7 @@ public final class Renderer {
             nextState();
         }
 
-        if (placement.getTs() > cutoff) {
+        if (placement.getTimestamp() > cutoff) {
             dumpImage(image, cutoff);
             cutoff += TimeSlot;
         }
