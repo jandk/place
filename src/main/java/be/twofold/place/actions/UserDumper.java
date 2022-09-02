@@ -1,11 +1,8 @@
 package be.twofold.place.actions;
 
+import be.twofold.place.Utils;
 import be.twofold.place.model.ByteArray;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
@@ -33,14 +30,7 @@ public final class UserDumper implements Consumer<Stream<String>> {
             .collect(Collectors.toList());
 
         System.out.println("Dumping to file...");
-        try (BufferedWriter writer = Files.newBufferedWriter(usersPath)) {
-            for (ByteArray user : users) {
-                writer.write(encoder.encodeToString(user.getArray()));
-                writer.write('\n');
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        Utils.writeAll(usersPath, users, u -> encoder.encodeToString(u.getArray()));
     }
 
     private ByteArray parseUserId(String s) {

@@ -6,14 +6,13 @@ import be.twofold.place.actions.UserReader;
 import be.twofold.place.model.ByteArray;
 
 import java.awt.*;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-public class Place2022 {
+public class Place2022Dumper {
     private static final List<Color> Colors = List.of(
         new Color(0xFF, 0xFF, 0xFF),
         new Color(0xD4, 0xD7, 0xD9),
@@ -54,8 +53,31 @@ public class Place2022 {
 
     private static final Path Root = Paths.get("C:\\Temp\\place2022");
 
-    public static void main(String[] args) throws IOException {
-        simplify();
+    public static void main(String[] args) {
+        Path usersPath = Root.resolve("users.txt");
+        Path placementsPath = Root.resolve("placements.txt");
+        Path modsPath = Root.resolve("mods.txt");
+
+        FileProcessor processor = new FileProcessor(Root);
+
+        // Dump all the users in a separate file
+        if (!Files.exists(usersPath)) {
+            System.out.println("Dumping users");
+            processor.process(new UserDumper(usersPath));
+        }
+
+        // Read all the users back in
+        System.out.println("Reading users");
+        Map<ByteArray, Integer> users = new UserReader(usersPath).get();
+
+        // Dump all sorted placements
+        System.out.println("Dumping sorted placements");
+        PlacementDumper placementDumper = new PlacementDumper(placementsPath, users);
+        processor.process(placementDumper);
+
+        // Dump all mods
+        System.out.println("Dumping mods");
+        placementDumper.dumpMods(modsPath);
     }
 
 //    private static void renderFrames() throws IOException {
@@ -81,32 +103,5 @@ public class Place2022 {
 //            Integer.parseInt(s, i4 + 1, s.length(), 10)
 //        );
 //    }
-
-    private static void simplify() throws IOException {
-        Path usersPath = Root.resolve("users.txt");
-        Path placementsPath = Root.resolve("placements.txt");
-        Path modsPath = Root.resolve("mods.txt");
-
-        FileProcessor processor = new FileProcessor(Root);
-
-        // Dump all the users in a separate file
-        if (!Files.exists(usersPath)) {
-            System.out.println("Dumping users...");
-            processor.process(new UserDumper(usersPath));
-        }
-
-        // Read all the users back in
-        System.out.println("Reading users...");
-        Map<ByteArray, Integer> users = new UserReader(usersPath).get();
-
-        // Dump all sorted placements
-        System.out.println("Dumping sorted placements...");
-        PlacementDumper placementDumper = new PlacementDumper(placementsPath, users);
-        processor.process(placementDumper);
-
-        // Dump all mods
-        System.out.println("Dumping mods");
-        placementDumper.dumpMods(modsPath);
-    }
 
 }

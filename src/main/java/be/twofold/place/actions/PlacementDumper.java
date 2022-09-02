@@ -1,12 +1,9 @@
 package be.twofold.place.actions;
 
+import be.twofold.place.Utils;
 import be.twofold.place.model.ByteArray;
 import be.twofold.place.model.Placement;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -77,25 +74,11 @@ public final class PlacementDumper implements Consumer<Stream<String>> {
             .sorted(Comparator.comparingLong(Placement::getTimestamp))
             .collect(Collectors.toList());
 
-        try (BufferedWriter writer = Files.newBufferedWriter(placementsPath)) {
-            for (Placement placement : placements) {
-                writer.write(placement.toString());
-                writer.write('\n');
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        Utils.writeAll(placementsPath, placements);
     }
 
     public void dumpMods(Path modsPath) {
-        try (BufferedWriter writer = Files.newBufferedWriter(modsPath)) {
-            for (String mod : mods) {
-                writer.write(mod);
-                writer.write('\n');
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        Utils.writeAll(modsPath, mods);
     }
 
 
