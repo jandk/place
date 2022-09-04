@@ -23,7 +23,8 @@ public final class FileProcessor {
     }
 
     public void process(Consumer<Stream<String>> consumer) {
-        ForkJoinPool forkJoinPool = new ForkJoinPool(8);
+        int processors = Runtime.getRuntime().availableProcessors() / 4;
+        ForkJoinPool forkJoinPool = new ForkJoinPool(processors);
         try {
             forkJoinPool.submit(() -> consumer
                 .accept(sourceFiles.stream()

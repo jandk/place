@@ -52,7 +52,7 @@ final class Simplifier {
     }
 
     private static Map<String, Integer> createColorIndex() {
-        List<String> colors = Place2022Renderer.Colors.stream()
+        List<String> colors = Renderer.Colors2022.stream()
             .map(color -> String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue()))
             .collect(Collectors.toList());
 
@@ -233,7 +233,7 @@ final class Simplifier {
         return collection.stream()
             .collect(Collectors.toUnmodifiableMap(
                 Function.identity(),
-                __ -> counter.getAndIncrement()
+                __ -> counter.incrementAndGet()
             ));
     }
 }
