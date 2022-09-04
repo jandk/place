@@ -81,7 +81,7 @@ final class Simplifier {
         }
 
         // Dump all mods if they don't exist
-        if (!Files.exists(modsPath)) {
+        if (!Files.exists(modsPath) && !mods.isEmpty()) {
             System.out.println("Dumping mods");
             dumpMods(modsPath);
         }
@@ -144,10 +144,15 @@ final class Simplifier {
             return null;
         }
 
-        long ts = parseDate(s.substring(0, i1));
-        int user = users.get(new ByteArray(decoder.decode(s.substring(i1 + 1, i2))));
+        // Take out invalid coordinates
         int x = Integer.parseInt(s, i2 + 1, i3, 10);
         int y = Integer.parseInt(s, i3 + 1, i4, 10);
+        if (x > 999 || y > 999) {
+            return null;
+        }
+
+        long ts = parseDate(s.substring(0, i1));
+        int user = users.get(new ByteArray(decoder.decode(s.substring(i1 + 1, i2))));
         int color = Integer.parseInt(s, i4 + 1, s.length(), 10);
         return new Placement(ts, user, x, y, color);
     }
