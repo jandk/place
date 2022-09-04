@@ -10,16 +10,10 @@ import java.awt.image.DataBufferByte;
 import java.awt.image.IndexColorModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Place2017 {
     private static final ExecutorService ImageSaver = Executors.newFixedThreadPool(24);
@@ -44,9 +38,7 @@ public class Place2017 {
     );
 
     public static void main(String[] args) {
-        System.out.println(formatColor(Colors.get(0)));
-        if (true) return;
-        List<Placement> placements = readPlacements();
+        List<Placement> placements = List.of();
 
         IndexColorModel colorModel = Utils.fromColors(Colors);
         BufferedImage image = new BufferedImage(1000, 1000, BufferedImage.TYPE_BYTE_INDEXED, colorModel);
@@ -70,10 +62,6 @@ public class Place2017 {
         dumpImage(image, Integer.MAX_VALUE);
     }
 
-    private static String formatColor(Color color) {
-        return String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
-    }
-
     private static void dumpImage(BufferedImage image, int cutoff) {
         ColorModel colorModel = image.getColorModel();
         boolean alphaPremultiplied = colorModel.isAlphaPremultiplied();
@@ -84,20 +72,4 @@ public class Place2017 {
         ImageSaver.submit(() -> ImageIO.write(copy, "png", file));
     }
 
-    private static List<Placement> readPlacements() {
-        try (Stream<String> lines = Files.lines(Paths.get("C:\\Temp\\place_tiles_sha1.csv"))) {
-            return lines.map(Place2017::parsePlacement).collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    private static Placement parsePlacement(String s) {
-        String[] split = s.split(",");
-        long ts = Long.parseLong(split[0]);
-        int x = Integer.parseInt(split[2]);
-        int y = Integer.parseInt(split[3]);
-        int color = Integer.parseInt(split[4]);
-        return new Placement(ts, 0, x, y, color);
-    }
 }
