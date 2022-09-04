@@ -14,7 +14,6 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -115,7 +114,7 @@ final class Simplifier {
         List<Placement> placements = stream
             .map(placementParser)
             .filter(Objects::nonNull)
-            .sorted(Comparator.comparingLong(Placement::getTimestamp))
+            .sorted()
             .collect(Collectors.toList());
 
         writeAll(placementsPath, placements, Objects::toString);
@@ -145,8 +144,8 @@ final class Simplifier {
         }
 
         // Take out invalid coordinates
-        int x = Integer.parseInt(s, i2 + 1, i3, 10);
-        int y = Integer.parseInt(s, i3 + 1, i4, 10);
+        short x = (short) Integer.parseInt(s, i2 + 1, i3, 10);
+        short y = (short) Integer.parseInt(s, i3 + 1, i4, 10);
         if (x > 999 || y > 999) {
             return null;
         }
@@ -171,9 +170,9 @@ final class Simplifier {
 
         long ts = parseDate(s.substring(0, i1));
         int user = users.get(new ByteArray(decoder.decode(s.substring(i1 + 1, i2))));
+        short x = (short) Integer.parseInt(s, i3 + 2, i4, 10);
+        short y = (short) Integer.parseInt(s, i4 + 1, s.length() - 1, 10);
         int color = ColorIndex.get(s.substring(i2 + 1, i3));
-        int x = Integer.parseInt(s, i3 + 2, i4, 10);
-        int y = Integer.parseInt(s, i4 + 1, s.length() - 1, 10);
         return new Placement(ts, user, x, y, color);
     }
 
@@ -198,8 +197,7 @@ final class Simplifier {
         }
         int end = s.indexOf(' ', 20);
         int fraction = Integer.parseInt(s, 20, end, 10);
-        int size = end - 20;
-        switch (size) {
+        switch (end - 20) {
             case 1:
                 return fraction * 100_000_000;
             case 2:

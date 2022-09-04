@@ -3,14 +3,14 @@ package be.twofold.place.model;
 /**
  * The placement of a single pixel by a user
  */
-public final class Placement {
+public final class Placement implements Comparable<Placement> {
     private final long timestamp;
     private final int user;
-    private final int x;
-    private final int y;
+    private final short x;
+    private final short y;
     private final int color;
 
-    public Placement(long timestamp, int user, int x, int y, int color) {
+    public Placement(long timestamp, int user, short x, short y, int color) {
         this.timestamp = timestamp;
         this.user = user;
         this.x = x;
@@ -27,8 +27,8 @@ public final class Placement {
         return new Placement(
             Long.parseLong(s, 0, i1, 10),
             Integer.parseInt(s, i1 + 1, i2, 10),
-            Integer.parseInt(s, i2 + 1, i3, 10),
-            Integer.parseInt(s, i3 + 1, i4, 10),
+            (short) Integer.parseInt(s, i2 + 1, i3, 10),
+            (short) Integer.parseInt(s, i3 + 1, i4, 10),
             Integer.parseInt(s, i4 + 1, s.length(), 10)
         );
     }
@@ -54,6 +54,11 @@ public final class Placement {
     }
 
     @Override
+    public int compareTo(Placement o) {
+        return Long.compare(timestamp, o.timestamp);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof Placement)) return false;
@@ -71,8 +76,8 @@ public final class Placement {
         int result = 1;
         result = 31 * result + Long.hashCode(timestamp);
         result = 31 * result + Integer.hashCode(user);
-        result = 31 * result + Integer.hashCode(x);
-        result = 31 * result + Integer.hashCode(y);
+        result = 31 * result + Short.hashCode(x);
+        result = 31 * result + Short.hashCode(y);
         result = 31 * result + Integer.hashCode(color);
         return result;
     }
