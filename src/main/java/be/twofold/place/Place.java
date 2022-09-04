@@ -25,28 +25,29 @@ public class Place {
     private static final ExecutorService ImageSaver = Executors.newFixedThreadPool(24);
 
     private static final List<Color> Colors = List.of(
-        Color.decode("#FFFFFF"),
-        Color.decode("#E4E4E4"),
-        Color.decode("#888888"),
-        Color.decode("#222222"),
-        Color.decode("#FFA7D1"),
-        Color.decode("#E50000"),
-        Color.decode("#E59500"),
-        Color.decode("#A06A42"),
-        Color.decode("#E5D900"),
-        Color.decode("#94E044"),
-        Color.decode("#02BE01"),
-        Color.decode("#00E5F0"),
-        Color.decode("#0083C7"),
-        Color.decode("#0000EA"),
-        Color.decode("#E04AFF"),
-        Color.decode("#820080")
+        new Color(0xff, 0xff, 0xff),
+        new Color(0xe4, 0xe4, 0xe4),
+        new Color(0x88, 0x88, 0x88),
+        new Color(0x22, 0x22, 0x22),
+        new Color(0xff, 0xa7, 0xd1),
+        new Color(0xe5, 0x00, 0x00),
+        new Color(0xe5, 0x95, 0x00),
+        new Color(0xa0, 0x6a, 0x42),
+        new Color(0xe5, 0xd9, 0x00),
+        new Color(0x94, 0xe0, 0x44),
+        new Color(0x02, 0xbe, 0x01),
+        new Color(0x00, 0xe5, 0xf0),
+        new Color(0x00, 0x83, 0xc7),
+        new Color(0x00, 0x00, 0xea),
+        new Color(0xe0, 0x4a, 0xff),
+        new Color(0x82, 0x00, 0x80)
     );
 
     public static void main(String[] args) {
         List<Placement> placements = readPlacements();
 
-        BufferedImage image = new BufferedImage(1000, 1000, BufferedImage.TYPE_BYTE_INDEXED, colorModel());
+        IndexColorModel colorModel = Utils.fromColors(Colors);
+        BufferedImage image = new BufferedImage(1000, 1000, BufferedImage.TYPE_BYTE_INDEXED, colorModel);
         byte[] rawImage = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
 
         int cutoff = 1490979600;
@@ -75,19 +76,6 @@ public class Place {
 
         File file = new File("C:\\Temp\\place_" + Instant.ofEpochSecond(cutoff).toString().substring(0, 16).replace(':', '-') + ".png");
         ImageSaver.submit(() -> ImageIO.write(copy, "png", file));
-    }
-
-    private static IndexColorModel colorModel() {
-        int size = Colors.size();
-        byte[] r = new byte[size];
-        byte[] g = new byte[size];
-        byte[] b = new byte[size];
-        for (int i = 0; i < size; i++) {
-            r[i] = (byte) Colors.get(i).getRed();
-            g[i] = (byte) Colors.get(i).getGreen();
-            b[i] = (byte) Colors.get(i).getBlue();
-        }
-        return new IndexColorModel(4, 16, r, g, b);
     }
 
     private static List<Placement> readPlacements() {

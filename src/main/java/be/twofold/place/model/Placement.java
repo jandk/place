@@ -18,6 +18,21 @@ public final class Placement {
         this.color = color;
     }
 
+    public static Placement parse(String s) {
+        int i1 = s.indexOf(',');
+        int i2 = s.indexOf(',', i1 + 1);
+        int i3 = s.indexOf(',', i2 + 1);
+        int i4 = s.indexOf(',', i3 + 1);
+
+        return new Placement(
+            Long.parseLong(s, 0, i1, 10),
+            Integer.parseInt(s, i1 + 1, i2, 10),
+            Integer.parseInt(s, i2 + 1, i3, 10),
+            Integer.parseInt(s, i3 + 1, i4, 10),
+            Integer.parseInt(s, i4 + 1, s.length(), 10)
+        );
+    }
+
     public long getTimestamp() {
         return timestamp;
     }

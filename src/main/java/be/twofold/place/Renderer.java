@@ -11,6 +11,7 @@ import java.awt.image.IndexColorModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -32,7 +33,7 @@ public final class Renderer {
     private int state = 0;
     private long cutoff = (1648817050315L / TimeSlot) * TimeSlot;
 
-    public Renderer(List<Color> palette, Path destination) throws IOException {
+    public Renderer(List<Color> palette, Path destination) {
         this.palette = palette;
         this.destination = destination;
         if (!Files.exists(destination)) {
@@ -42,7 +43,7 @@ public final class Renderer {
         nextState();
     }
 
-    public void accept(Placement placement) throws IOException {
+    public void accept(Placement placement) {
         int x = placement.getX();
         int y = placement.getY();
         if (x > image.getWidth() || y > image.getHeight()) {
@@ -92,18 +93,24 @@ public final class Renderer {
         }
     }
 
-    private void nextState() throws IOException {
-        state++;
-        Files.createDirectory(destination.resolve(String.valueOf(state)));
-        updateImage();
+    private void nextState() {
+        try {
+            state++;
+            Files.createDirectory(destination.resolve(String.valueOf(state)));
+            updateImage();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private void updateImage() {
         int width = state > 1 ? 2000 : 1000;
         int height = state > 2 ? 2000 : 1000;
+        int paletteSize = (state + 1) * 8;
 
         BufferedImage oldImage = image;
-        image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED, palette());
+        IndexColorModel colorModel = Utils.fromColors(palette.subList(0, paletteSize));
+        image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED, colorModel);
         imageBuffer = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
 
         if (oldImage != null) {
@@ -114,22 +121,6 @@ public final class Renderer {
                 System.arraycopy(oldImageBuffer, y * oldWidth, imageBuffer, y * width, oldWidth);
             }
         }
-    }
-
-    private IndexColorModel palette() {
-        int paletteSize = (state + 1) * 8;
-
-        byte[] r = new byte[paletteSize];
-        byte[] g = new byte[paletteSize];
-        byte[] b = new byte[paletteSize];
-
-        for (int i = 0; i < paletteSize; i++) {
-            r[i] = (byte) palette.get(i).getRed();
-            g[i] = (byte) palette.get(i).getGreen();
-            b[i] = (byte) palette.get(i).getBlue();
-        }
-
-        return new IndexColorModel(paletteSize > 16 ? 5 : 4, paletteSize, r, g, b);
     }
 
 }

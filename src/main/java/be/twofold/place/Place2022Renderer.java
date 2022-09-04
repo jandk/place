@@ -4,7 +4,6 @@ import be.twofold.place.model.Placement;
 
 import java.awt.*;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -58,30 +57,9 @@ public class Place2022Renderer {
 
         try (Stream<String> lines = Files.lines(Root.resolve("placements.txt"))) {
             lines
-                .map(Place2022Renderer::parsePlacement)
-                .forEach(placement -> {
-                    try {
-                        renderer.accept(placement);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                });
+                .map(Placement::parse)
+                .forEach(renderer::accept);
         }
-    }
-
-    private static Placement parsePlacement(String s) {
-        int i1 = s.indexOf(',');
-        int i2 = s.indexOf(',', i1 + 1);
-        int i3 = s.indexOf(',', i2 + 1);
-        int i4 = s.indexOf(',', i3 + 1);
-
-        return new Placement(
-            Long.parseLong(s, 0, i1, 10),
-            Integer.parseInt(s, i1 + 1, i2, 10),
-            Integer.parseInt(s, i2 + 1, i3, 10),
-            Integer.parseInt(s, i3 + 1, i4, 10),
-            Integer.parseInt(s, i4 + 1, s.length(), 10)
-        );
     }
 
 }
