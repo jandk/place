@@ -1,8 +1,28 @@
 package be.twofold.place;
 
+import be.twofold.place.model.Placement;
+
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBufferByte;
+import java.awt.image.IndexColorModel;
+import java.awt.image.WritableRaster;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
 import java.time.Year;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 final class Renderer {
 
@@ -62,11 +82,103 @@ final class Renderer {
         new Color(0x6d, 0x00, 0x1a)
     );
 
-    private static final int numProcessors = Runtime.getRuntime().availableProcessors();
+    private final Path placementsPath;
+    private final Path targetDirectory;
     private final List<Color> colors;
 
-    Renderer(Year year) {
+    // Render variables
+    private static final int FramePerMillis = 300 * 1000; // In milliseconds
+    private final ExecutorService pool;
+    private BufferedImage image;
+    private byte[] imageBuffer;
+    private int state = 0;
+    private long cutoff;
+
+    Renderer(Path placementsPath, Path targetDirectory, Year year) {
+        this.placementsPath = Objects.requireNonNull(placementsPath);
+        this.targetDirectory = Objects.requireNonNull(targetDirectory);
         this.colors = year.getValue() == 2017 ? Colors2017 : Colors2022;
+
+        int processors = Runtime.getRuntime().availableProcessors() / 2;
+        LinkedBlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>(processors * 2);
+        pool = new ThreadPoolExecutor(processors, processors, 1, TimeUnit.MINUTES, workQueue);
+
+        nextState();
+    }
+
+    void render() throws IOException {
+        try (Stream<String> lines = Files.lines(placementsPath)) {
+            lines
+                .map(Placement::parse)
+                .forEach(this::placePixel);
+        }
+
+        try {
+            pool.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void placePixel(Placement placement) {
+        if (cutoff == 0) {
+            cutoff = (placement.getTimestamp() / FramePerMillis) * FramePerMillis;
+        }
+
+        if (placement.getTimestamp() > cutoff) {
+            dumpImage(image, cutoff);
+            cutoff += FramePerMillis;
+        }
+
+        int x = placement.getX();
+        int y = placement.getY();
+        if (x > image.getWidth() || y > image.getHeight()) {
+            nextState();
+        }
+
+        int index = y * image.getWidth() + x;
+        imageBuffer[index] = (byte) placement.getColor();
+    }
+
+    private void dumpImage(BufferedImage image, long cutoff) {
+        ColorModel colorModel = image.getColorModel();
+        WritableRaster writableRaster = image.copyData(null);
+        BufferedImage copy = new BufferedImage(colorModel, writableRaster, colorModel.isAlphaPremultiplied(), null);
+
+        String formattedDate = Instant.ofEpochMilli(cutoff).toString().replaceAll("[:-]", "");
+        System.out.println("Dumping image: " + state + "\\" + formattedDate);
+        File file = targetDirectory
+            .resolve("place_" + state + "_" + formattedDate + ".png")
+            .toFile();
+
+        while (true) {
+            try {
+                pool.submit(() -> ImageIO.write(copy, "png", file));
+                break;
+            } catch (RejectedExecutionException e) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ignored) {
+                }
+            }
+        }
+    }
+
+    private void nextState() {
+        state++;
+
+        int width = state > 1 ? 2000 : 1000;
+        int height = state > 2 ? 2000 : 1000;
+        int paletteSize = (state + 1) * 8;
+
+        BufferedImage oldImage = image;
+        IndexColorModel colorModel = Utils.fromColors(colors.subList(0, paletteSize));
+        image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED, colorModel);
+        imageBuffer = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+
+        if (oldImage != null) {
+            image.getGraphics().drawImage(oldImage, 0, 0, null);
+        }
     }
 
 }

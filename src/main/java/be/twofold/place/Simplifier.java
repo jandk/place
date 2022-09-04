@@ -36,11 +36,10 @@ final class Simplifier {
     private final List<String> mods = new ArrayList<>();
     private Map<ByteArray, Integer> users;
 
-    Simplifier(List<Path> sourceFiles, Path targetDirectory, Year year) throws IOException {
+    Simplifier(List<Path> sourceFiles, Path targetDirectory, Year year) {
         Objects.requireNonNull(targetDirectory);
         this.sourceFiles = List.copyOf(sourceFiles);
 
-        Files.createDirectories(targetDirectory);
         this.usersPath = targetDirectory.resolve("users.txt");
         this.placementsPath = targetDirectory.resolve("placements.txt");
         this.modsPath = targetDirectory.resolve("mods.txt");

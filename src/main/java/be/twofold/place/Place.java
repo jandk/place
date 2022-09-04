@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 
 public final class Place {
 
+    // TODO: Something about 1490979600 as a cutoff for 2017 I need to check
+
     public static void main(String[] args) throws IOException {
         if (args.length < 3 || args.length > 4) {
             System.out.println("Usage: java -jar place.jar <year> <mode> <sourceDirectory> <targetDirectory>");
@@ -25,10 +27,19 @@ public final class Place {
         String mode = args[1];
         Path sourceDirectory = Path.of(args[2]);
         Path targetDirectory = args.length == 4 ? Path.of(args[3]) : sourceDirectory;
+        Files.createDirectories(targetDirectory);
 
-        List<Path> sourceFiles = scanFiles(sourceDirectory, properties.getProperty("file_regex"));
-        Simplifier simplifier = new Simplifier(sourceFiles, targetDirectory, year);
-        simplifier.simplify();
+        if ("simplify".equals(mode)) {
+            List<Path> sourceFiles = scanFiles(sourceDirectory, properties.getProperty("file_regex"));
+            Simplifier simplifier = new Simplifier(sourceFiles, targetDirectory, year);
+            simplifier.simplify();
+        } else if ("render".equals(mode)) {
+            Path placementsPath = sourceDirectory.resolve("placements.txt");
+            new Renderer(placementsPath, targetDirectory, year).render();
+        } else {
+            System.out.println("Unknown mode: " + mode);
+            System.exit(1);
+        }
     }
 
     private static Year validateYear(String s) {
