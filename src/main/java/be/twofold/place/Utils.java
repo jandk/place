@@ -23,10 +23,4 @@ public final class Utils {
         return new IndexColorModel(colors.size() > 16 ? 5 : 4, colors.size(), r, g, b);
     }
 
-    static void sleep(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ignored) {
-        }
-    }
 }
