@@ -33,7 +33,7 @@ public final class Renderer {
     private int state = 0;
     private long cutoff = (1648817050315L / TimeSlot) * TimeSlot;
 
-    public Renderer(List<Color> palette, Path destination) {
+    public Renderer(List<Color> palette, Path destination) throws IOException {
         this.palette = palette;
         this.destination = destination;
         if (!Files.exists(destination)) {
@@ -85,10 +85,7 @@ public final class Renderer {
                 pool.submit(() -> ImageIO.write(copy, "png", file));
                 break;
             } catch (RejectedExecutionException e) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ignored) {
-                }
+                Utils.sleep(100);
             }
         }
     }

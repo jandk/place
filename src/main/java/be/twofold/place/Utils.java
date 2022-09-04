@@ -87,4 +87,11 @@ public final class Utils {
                 throw new IllegalArgumentException();
         }
     }
+
+    static void sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ignored) {
+        }
+    }
 }

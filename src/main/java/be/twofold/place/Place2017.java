@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Place {
+public class Place2017 {
     private static final ExecutorService ImageSaver = Executors.newFixedThreadPool(24);
 
     private static final List<Color> Colors = List.of(
@@ -80,7 +80,7 @@ public class Place {
 
     private static List<Placement> readPlacements() {
         try (Stream<String> lines = Files.lines(Paths.get("C:\\Temp\\place_tiles_sha1.csv"))) {
-            return lines.map(Place::parsePlacement).collect(Collectors.toList());
+            return lines.map(Place2017::parsePlacement).collect(Collectors.toList());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
