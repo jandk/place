@@ -24,43 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 final class Simplifier {
-    private static final Map<String, Integer> ColorIndex = Map.ofEntries(
-        Map.entry("#FFFFFF", 0),
-        Map.entry("#D4D7D9", 1),
-        Map.entry("#898D90", 2),
-        Map.entry("#000000", 3),
-        Map.entry("#9C6926", 4),
-        Map.entry("#FF99AA", 5),
-        Map.entry("#B44AC0", 6),
-        Map.entry("#811E9F", 7),
-        Map.entry("#51E9F4", 8),
-        Map.entry("#3690EA", 9),
-        Map.entry("#2450A4", 10),
-        Map.entry("#7EED56", 11),
-        Map.entry("#00A368", 12),
-        Map.entry("#FFD635", 13),
-        Map.entry("#FFA800", 14),
-        Map.entry("#FF4500", 15),
-
-        Map.entry("#6D482F", 16),
-        Map.entry("#FF3881", 17),
-        Map.entry("#6A5CFF", 18),
-        Map.entry("#493AC1", 19),
-        Map.entry("#009EAA", 20),
-        Map.entry("#00756F", 21),
-        Map.entry("#00CC78", 22),
-        Map.entry("#BE0039", 23),
-
-        Map.entry("#515252", 24),
-        Map.entry("#FFB470", 25),
-        Map.entry("#DE107F", 26),
-        Map.entry("#E4ABFF", 27),
-        Map.entry("#94B3FF", 28),
-        Map.entry("#00CCC0", 29),
-        Map.entry("#FFF8B8", 30),
-        Map.entry("#6D001A", 31)
-    );
-
+    private static final Map<String, Integer> ColorIndex = createColorIndex();
     private static final Base64.Encoder encoder = Base64.getEncoder();
     private static final Base64.Decoder decoder = Base64.getDecoder();
 
@@ -70,7 +34,6 @@ final class Simplifier {
     private final Path modsPath;
 
     private final Function<String, Placement> placementParser;
-
     private final List<String> mods = new ArrayList<>();
     private Map<ByteArray, Integer> users;
 
@@ -86,6 +49,14 @@ final class Simplifier {
         this.placementParser = year.getValue() == 2017
             ? this::parsePlacement2017
             : this::parsePlacement2022;
+    }
+
+    private static Map<String, Integer> createColorIndex() {
+        List<String> colors = Place2022Renderer.Colors.stream()
+            .map(color -> String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue()))
+            .collect(Collectors.toList());
+
+        return toMap(colors);
     }
 
     void simplify() {
@@ -130,16 +101,17 @@ final class Simplifier {
 
     private Map<ByteArray, Integer> readUsers() {
         try (Stream<String> lines = Files.lines(usersPath)) {
-            AtomicInteger counter = new AtomicInteger();
-            return lines
+            List<ByteArray> users = lines
                 .map(s -> new ByteArray(decoder.decode(s)))
-                .collect(Collectors.toUnmodifiableMap(Function.identity(), __ -> counter.getAndIncrement()));
+                .collect(Collectors.toList());
+
+            return toMap(users);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    public void dumpPlacements(Stream<String> stream) {
+    private void dumpPlacements(Stream<String> stream) {
         List<Placement> placements = stream
             .map(placementParser)
             .filter(Objects::nonNull)
@@ -149,7 +121,7 @@ final class Simplifier {
         writeAll(placementsPath, placements, Objects::toString);
     }
 
-    public void dumpMods(Path modsPath) {
+    private void dumpMods(Path modsPath) {
         writeAll(modsPath, mods, Objects::toString);
     }
 
@@ -200,7 +172,7 @@ final class Simplifier {
         return new Placement(ts, user, x, y, color);
     }
 
-    private static long parseDate(String s) {
+    private long parseDate(String s) {
         int year = Integer.parseInt(s, 0, 4, 10);
         int month = Integer.parseInt(s, 5, 7, 10);
         int dayOfMonth = Integer.parseInt(s, 8, 10, 10);
@@ -215,7 +187,7 @@ final class Simplifier {
             .toEpochMilli();
     }
 
-    private static int parseNanoOfSecond(String s) {
+    private int parseNanoOfSecond(String s) {
         if (s.charAt(19) != '.') {
             return 0;
         }
@@ -234,7 +206,7 @@ final class Simplifier {
         }
     }
 
-    private static <T> void writeAll(Path outputPath, Collection<T> collection, Function<? super T, String> mapper) {
+    private <T> void writeAll(Path outputPath, Collection<T> collection, Function<? super T, String> mapper) {
         try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
             collection.stream()
                 .map(mapper)
@@ -251,4 +223,12 @@ final class Simplifier {
         }
     }
 
+    private static <T> Map<T, Integer> toMap(Collection<T> collection) {
+        AtomicInteger counter = new AtomicInteger();
+        return collection.stream()
+            .collect(Collectors.toUnmodifiableMap(
+                Function.identity(),
+                __ -> counter.getAndIncrement()
+            ));
+    }
 }

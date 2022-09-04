@@ -44,6 +44,8 @@ public class Place2017 {
     );
 
     public static void main(String[] args) {
+        System.out.println(formatColor(Colors.get(0)));
+        if (true) return;
         List<Placement> placements = readPlacements();
 
         IndexColorModel colorModel = Utils.fromColors(Colors);
@@ -66,6 +68,10 @@ public class Place2017 {
         }
 
         dumpImage(image, Integer.MAX_VALUE);
+    }
+
+    private static String formatColor(Color color) {
+        return String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
     }
 
     private static void dumpImage(BufferedImage image, int cutoff) {

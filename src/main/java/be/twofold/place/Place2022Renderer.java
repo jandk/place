@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class Place2022Renderer {
-    private static final List<Color> Colors = List.of(
+    static final List<Color> Colors = List.of(
         new Color(0xFF, 0xFF, 0xFF),
         new Color(0xD4, 0xD7, 0xD9),
         new Color(0x89, 0x8D, 0x90),
