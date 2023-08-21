@@ -1,29 +1,20 @@
 package be.twofold.place;
 
-import be.twofold.place.model.ByteArray;
-import be.twofold.place.model.Placement;
+import be.twofold.place.model.*;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.Year;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collection;
+import java.awt.*;
+import java.io.*;
+import java.nio.file.*;
+import java.time.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.*;
+import java.util.concurrent.atomic.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 final class Simplifier {
-    private static final Map<String, Integer> ColorIndex = createColorIndex();
+    private static final Map<String, Integer> ColorIndex2022 = createColorIndex(Renderer.Colors2022);
+    private static final Map<String, Integer> ColorIndex2023 = createColorIndex(Renderer.Colors2023);
     private static final Base64.Encoder encoder = Base64.getEncoder();
     private static final Base64.Decoder decoder = Base64.getDecoder();
 
@@ -44,13 +35,16 @@ final class Simplifier {
         this.placementsPath = targetDirectory.resolve("placements.txt");
         this.modsPath = targetDirectory.resolve("mods.txt");
 
-        this.placementParser = year.getValue() == 2017
-            ? this::parsePlacement2017
-            : this::parsePlacement2022;
+        this.placementParser = switch (year.getValue()) {
+            case 2017 -> this::parsePlacement2017;
+            case 2022 -> this::parsePlacement2022;
+            case 2023 -> this::parsePlacement2023;
+            default -> throw new IllegalArgumentException("Year must be 2017, 2022 or 2023");
+        };
     }
 
-    private static Map<String, Integer> createColorIndex() {
-        List<String> colors = Renderer.Colors2022.stream()
+    private static Map<String, Integer> createColorIndex(List<Color> colorList) {
+        List<String> colors = colorList.stream()
             .map(color -> String.format("#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue()))
             .collect(Collectors.toList());
 
@@ -94,7 +88,7 @@ final class Simplifier {
             .collect(Collectors.toList());
 
         System.out.println("Dumping to file...");
-        writeAll(usersPath, users, u -> encoder.encodeToString(u.getArray()));
+        writeAll(usersPath, users, u -> encoder.encodeToString(u.array()));
     }
 
     private Map<ByteArray, Integer> readUsers() {
@@ -171,7 +165,27 @@ final class Simplifier {
         int user = users.get(new ByteArray(decoder.decode(s.substring(i1 + 1, i2))));
         short x = (short) Integer.parseInt(s, i3 + 2, i4, 10);
         short y = (short) Integer.parseInt(s, i4 + 1, s.length() - 1, 10);
-        int color = ColorIndex.get(s.substring(i2 + 1, i3));
+        int color = ColorIndex2022.get(s.substring(i2 + 1, i3));
+        return new Placement(ts, user, x, y, color);
+    }
+
+    private Placement parsePlacement2023(String s) {
+        int i1 = s.indexOf(',');
+        int i2 = s.indexOf(',', i1 + 1);
+        int i3 = s.indexOf(',', i2 + 1);
+        int i4 = s.indexOf(',', i3 + 1);
+
+        // Mod lines have more than 4 commas
+        if (s.indexOf(',', i4 + 1) != -1) {
+            mods.add(s);
+            return null;
+        }
+
+        long ts = parseDate(s.substring(0, i1));
+        int user = users.get(new ByteArray(decoder.decode(s.substring(i1 + 1, i2))));
+        short x = (short) Integer.parseInt(s, i2 + 2, i3, 10);
+        short y = (short) Integer.parseInt(s, i3 + 1, i4 - 1, 10);
+        int color = ColorIndex2023.get(s.substring(i4 + 1));
         return new Placement(ts, user, x, y, color);
     }
 
@@ -196,16 +210,12 @@ final class Simplifier {
         }
         int end = s.indexOf(' ', 20);
         int fraction = Integer.parseInt(s, 20, end, 10);
-        switch (end - 20) {
-            case 1:
-                return fraction * 100_000_000;
-            case 2:
-                return fraction * 10_000_000;
-            case 3:
-                return fraction * 1_000_000;
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (end - 20) {
+            case 1 -> fraction * 100_000_000;
+            case 2 -> fraction * 10_000_000;
+            case 3 -> fraction * 1_000_000;
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     private <T> void writeAll(Path outputPath, Collection<T> collection, Function<? super T, String> mapper) {

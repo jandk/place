@@ -1,7 +1,7 @@
 package be.twofold.place;
 
 import java.awt.*;
-import java.awt.image.IndexColorModel;
+import java.awt.image.*;
 import java.util.List;
 
 public final class Utils {

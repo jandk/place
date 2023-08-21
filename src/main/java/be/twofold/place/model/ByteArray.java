@@ -1,17 +1,10 @@
 package be.twofold.place.model;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 
-public final class ByteArray implements Comparable<ByteArray> {
-    private final byte[] array;
-
-    public ByteArray(byte[] array) {
-        this.array = Objects.requireNonNull(array);
-    }
-
-    public byte[] getArray() {
-        return array;
+public record ByteArray(byte[] array) implements Comparable<ByteArray> {
+    public ByteArray {
+        Objects.requireNonNull(array, "array is null");
     }
 
     @Override

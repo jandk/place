@@ -1,14 +1,10 @@
 package be.twofold.place;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Year;
-import java.util.List;
-import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.io.*;
+import java.nio.file.*;
+import java.time.*;
+import java.util.*;
+import java.util.stream.*;
 
 public final class Place {
 
@@ -17,7 +13,7 @@ public final class Place {
     public static void main(String[] args) throws IOException {
         if (args.length < 3 || args.length > 4) {
             System.out.println("Usage: java -jar place.jar <year> <mode> <sourceDirectory> <targetDirectory>");
-            System.out.println("  - year can be any of '2017', '2022'");
+            System.out.println("  - year can be any of '2017', '2022' or '2023'");
             System.out.println("  - mode can be any of 'simplify', 'render'");
             System.exit(1);
         }
@@ -44,7 +40,7 @@ public final class Place {
 
     private static Year validateYear(String s) {
         Year year = Year.parse(s);
-        if (year.getValue() != 2017 && year.getValue() != 2022) {
+        if (year.getValue() != 2017 && year.getValue() != 2022 && year.getValue() != 2023) {
             throw new IllegalArgumentException("Year must be 2017 or 2022");
         }
         return year;
